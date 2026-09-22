@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>문명: 신세계의 도래</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: #020617;
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, "Noto Sans KR", sans-serif;
+    overflow: hidden;
+  }
+  .serif-title { font-family: Georgia, "Noto Serif KR", serif; }
+  .glass-panel {
+    background: rgba(15, 23, 42, 0.78);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .glass-card {
+    background: rgba(30, 41, 59, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+  @keyframes modalPop {
+    from { opacity: 0; transform: scale(0.94) translateY(6px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .animate-modal { animation: modalPop 0.22s ease-out; }
+  .glow-tech { box-shadow: 0 0 22px rgba(34, 211, 238, 0.35); }
+  #gameLayout { height: 100vh; height: 100dvh; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 8px; }
+</style>
+</head>
+<body>
+<div id="gameLayout" class="w-full flex flex-col overflow-hidden bg-slate-950">
+<!-- Top Bar Header -->
+<header class="h-16 glass-panel z-20 flex items-center justify-between px-4 md:px-6 border-b border-slate-800/80 shrink-0">
+    <!-- Empire Info -->
+    <div class="flex items-center space-x-3">
+        <div id="civFlagIcon" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 to-yellow-400 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg border border-yellow-300/40">
+            🏛️
+        </div>
+        <div>
+            <h1 id="civNameDisplay" class="font-extrabold text-sm md:text-base text-slate-100 tracking-wide serif-title">수도 건설 필요</h1>
+            <div class="flex items-center space-x-2 text-[11px] text-amber-400 font-semibold">
+                <span id="turnCounter">턴 1</span>
+                <span>•</span>
+                <span id="eraText">고대 시대</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resource Stats Bar -->
+    <div class="hidden sm:flex items-center space-x-4 md:space-x-6 glass-card px-4 py-2 rounded-2xl border border-slate-700/60 shadow-inner">
+        <div class="flex items-center space-x-2" title="목재">
+            <span class="text-base">🪵</span>
+            <div>
+                <div class="text-[9px] text-slate-400 font-bold uppercase">목재</div>
+                <div class="flex items-center space-x-1">
+                    <span id="resWood" class="font-extrabold text-xs text-amber-300">100</span>
+                    <span id="rateWood" class="text-[10px] text-emerald-400 font-bold">(+10)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2" title="석재">
+            <span class="text-base">🪨</span>
+            <div>
+                <div class="text-[9px] text-slate-400 font-bold uppercase">석재</div>
+                <div class="flex items-center space-x-1">
+                    <span id="resStone" class="font-extrabold text-xs text-slate-300">50</span>
+                    <span id="rateStone" class="text-[10px] text-emerald-400 font-bold">(+5)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2" title="철광석">
+            <span class="text-base">⚙️</span>
+            <div>
+                <div class="text-[9px] text-slate-400 font-bold uppercase">철광석</div>
+                <div class="flex items-center space-x-1">
+                    <span id="resIron" class="font-extrabold text-xs text-slate-400">0</span>
+                    <span id="rateIron" class="text-[10px] text-emerald-400 font-bold">(+0)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="h-5 w-px bg-slate-800"></div>
+
+        <div class="flex items-center space-x-2" title="골드">
+            <span class="text-base">🪙</span>
+            <div>
+                <div class="text-[9px] text-slate-400 font-bold uppercase">골드</div>
+                <div class="flex items-center space-x-1">
+                    <span id="resGold" class="font-extrabold text-xs text-yellow-300">60</span>
+                    <span id="rateGold" class="text-[10px] text-emerald-400 font-bold">(+6)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2" title="과학력">
+            <span class="text-base">🔬</span>
+            <div>
+                <div class="text-[9px] text-slate-400 font-bold uppercase">과학력</div>
+                <div class="flex items-center space-x-1">
+                    <span id="resScience" class="font-extrabold text-xs text-cyan-300">0</span>
+                    <span id="rateScience" class="text-[10px] text-emerald-400 font-bold">(+4)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="h-5 w-px bg-slate-800"></div>
+
+        <div class="flex items-center space-x-2" title="턴 당 건설 한도">
+            <span class="text-base">🔨</span>
+            <div>
+                <div class="text-[9px] text-slate-400 font-bold uppercase">턴 건설</div>
+                <div class="font-extrabold text-xs text-indigo-300">
+                    <span id="buildsThisTurn">0</span> / <span id="maxBuildsPerTurn">3</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Header Buttons -->
+    <div class="flex items-center space-x-2 md:space-x-3">
+        <button id="diplomacyBtn" class="px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl bg-indigo-600/90 hover:bg-indigo-500 text-indigo-50 font-bold text-xs transition flex items-center space-x-1.5 border border-indigo-400/40 shadow-lg">
+            <span>🤝</span>
+            <span class="hidden sm:inline">외교</span>
+        </button>
+        <button id="techTreeBtn" class="px-3 py-2 md:px-4 md:py-2.5 rounded-xl bg-cyan-600/90 hover:bg-cyan-500 text-cyan-50 font-bold text-xs transition flex items-center space-x-1.5 border border-cyan-400/40 shadow-lg">
+            <span>🗂️</span>
+            <span class="hidden sm:inline">테크트리</span>
+        </button>
+        <button id="endTurnBtn" class="px-4 py-2 md:px-5 md:py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs transition transform active:scale-95 shadow-lg flex items-center space-x-1.5">
+            <span>턴 종료</span>
+            <span>▶️</span>
+        </button>
+    </div>
+</header>
+
+<!-- Main Game Canvas Container -->
+<main class="relative flex-1 w-full h-full overflow-hidden bg-slate-950">
+    <canvas id="gameCanvas" class="absolute inset-0 w-full h-full"></canvas>
+
+    <!-- Start Phase Guidance Overlay -->
+    <div id="startPhaseOverlay" class="absolute top-6 left-1/2 -translate-x-1/2 z-30 glass-panel px-6 py-3 rounded-2xl border border-yellow-500/60 text-yellow-300 font-black text-xs shadow-2xl flex items-center space-x-2 animate-bounce">
+        <span class="text-base">🎯</span>
+        <span>지도의 원하는 타일을 클릭하여 제국의 수도를 세우세요!</span>
+    </div>
+
+    <!-- Floating Notice Banner -->
+    <div id="noticeBanner" class="hidden absolute top-4 left-1/2 -translate-x-1/2 z-30 glass-panel px-5 py-2.5 rounded-2xl border border-amber-500/50 text-amber-200 font-bold text-xs shadow-2xl flex items-center space-x-2 transition-all">
+        <span class="text-amber-400 text-base">ℹ️</span>
+        <span id="noticeText">알림 메시지</span>
+    </div>
+
+    <!-- Zoom & Map Controls -->
+    <div class="absolute bottom-6 left-6 z-10 glass-panel p-2 rounded-2xl flex flex-col space-y-2 border border-slate-700/60 shadow-2xl">
+        <button id="zoomInBtn" class="w-10 h-10 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 flex items-center justify-center transition border border-slate-600/40 text-base font-bold" title="확대 (+)">
+            +
+        </button>
+        <button id="zoomOutBtn" class="w-10 h-10 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 flex items-center justify-center transition border border-slate-600/40 text-base font-bold" title="축소 (-)">
+            −
+        </button>
+        <button id="recenterBtn" class="w-10 h-10 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 flex items-center justify-center transition border border-slate-600/40 text-base" title="수도로 이동">
+            🏠
+        </button>
+    </div>
+
+    <!-- Current Active Tech Widget -->
+    <div id="currentResearchWidget" class="absolute bottom-6 left-24 md:left-28 z-10 glass-panel px-4 py-3 rounded-2xl border border-cyan-500/40 flex items-center space-x-3 shadow-2xl max-w-xs cursor-pointer hover:border-cyan-400 transition group">
+        <div class="w-10 h-10 rounded-xl bg-cyan-950 border border-cyan-500/50 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition text-base">
+            🧪
+        </div>
+        <div class="flex-1 min-w-0">
+            <div class="text-[10px] text-slate-400 uppercase font-extrabold tracking-wider">현재 연구 진행</div>
+            <div id="researchTechName" class="text-xs font-bold text-cyan-200 truncate">기술 선택 필요</div>
+            <div class="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden border border-slate-700">
+                <div id="researchProgressBar" class="bg-cyan-400 h-full w-0 transition-all duration-300"></div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- SETUP CAPITAL MODAL -->
+<div id="capitalModalBackdrop" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-panel w-full max-w-md rounded-3xl border border-yellow-500/50 shadow-2xl p-6 space-y-4 animate-modal">
+        <div class="text-center space-y-2">
+            <div class="w-12 h-12 rounded-2xl bg-yellow-500/20 text-yellow-400 flex items-center justify-center text-2xl border border-yellow-500/40 mx-auto">
+                👑
+            </div>
+            <h2 class="text-lg font-black text-slate-100 serif-title">새로운 제국의 창공</h2>
+            <p class="text-xs text-slate-400">선택하신 타일을 기점으로 3x3 영토가 수립됩니다. 제국의 명칭을 선포해 주십시오.</p>
+        </div>
+        <div class="space-y-1.5">
+            <label class="text-[11px] font-bold text-slate-300 uppercase">제국 및 국가 이름</label>
+            <input id="civNameInput" type="text" value="대한 제국" placeholder="예: 대한 제국, 로마 제국" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-100 font-semibold text-xs focus:outline-none focus:border-amber-400">
+        </div>
+        <div class="p-3 bg-amber-950/30 rounded-xl border border-amber-500/30 text-[11px] text-amber-200 leading-relaxed">
+            💡 <b>수도 특권:</b> 수도 타일은 기본적으로 [농장]과 [병영] 능력을 동시 보유하여 유닛 생산이 가능합니다!
+        </div>
+        <button id="confirmCapitalBtn" class="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black text-xs shadow-lg hover:from-amber-400 hover:to-yellow-400 transition">
+            수도 창건 및 역사 시작
+        </button>
+    </div>
+</div>
+
+<!-- CENTERED TILE MODAL -->
+<div id="tileModalBackdrop" class="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-40 hidden flex items-center justify-center p-4">
+    <div id="tileModalCard" class="glass-panel w-full max-w-lg rounded-3xl border border-slate-700/80 shadow-2xl overflow-hidden flex flex-col animate-modal max-h-[88vh]">
+        
+        <!-- Modal Header -->
+        <div class="p-4 md:p-5 border-b border-slate-800/90 flex items-center justify-between bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900">
+            <div class="flex items-center space-x-3">
+                <div id="modalTileIcon" class="w-11 h-11 rounded-2xl bg-slate-800 flex items-center justify-center text-2xl border border-slate-700 shadow-inner">
+                    🌱
+                </div>
+                <div>
+                    <h2 id="modalTileTitle" class="text-base font-extrabold text-slate-100 serif-title">초원 타일</h2>
+                    <p id="modalTileOwner" class="text-xs font-semibold text-slate-400">소유주: 대한 제국</p>
+                </div>
+            </div>
+            <button id="closeTileModalBtn" class="w-9 h-9 rounded-full bg-slate-800 hover:bg-rose-500/20 hover:text-rose-400 text-slate-400 flex items-center justify-center transition border border-slate-700 text-base">
+                ✕
+            </button>
+        </div>
+
+        <!-- Modal Content (Scrollable) -->
+        <div class="p-5 space-y-4 overflow-y-auto flex-1">
+            
+            <!-- Tile Yield Stats -->
+            <div class="grid grid-cols-4 gap-2">
+                <div class="glass-card p-2 rounded-xl border border-slate-800/80 flex flex-col items-center text-center">
+                    <span class="text-[9px] uppercase font-bold text-slate-400">목재</span>
+                    <div class="mt-1 text-amber-300 font-black text-xs" id="modalYieldWood">+2</div>
+                </div>
+                <div class="glass-card p-2 rounded-xl border border-slate-800/80 flex flex-col items-center text-center">
+                    <span class="text-[9px] uppercase font-bold text-slate-400">석재</span>
+                    <div class="mt-1 text-slate-300 font-black text-xs" id="modalYieldStone">+0</div>
+                </div>
+                <div class="glass-card p-2 rounded-xl border border-slate-800/80 flex flex-col items-center text-center">
+                    <span class="text-[9px] uppercase font-bold text-slate-400">골드</span>
+                    <div class="mt-1 text-yellow-300 font-black text-xs" id="modalYieldGold">+1</div>
+                </div>
+                <div class="glass-card p-2 rounded-xl border border-slate-800/80 flex flex-col items-center text-center">
+                    <span class="text-[9px] uppercase font-bold text-slate-400">과학</span>
+                    <div class="mt-1 text-cyan-300 font-black text-xs" id="modalYieldSci">+0</div>
+                </div>
+            </div>
+
+            <!-- Existing Building Information -->
+            <div class="glass-card p-3.5 rounded-2xl border border-slate-800/80 space-y-1">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">건설된 시설</span>
+                    <span id="modalBuildingBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">없음</span>
+                </div>
+                <p id="modalBuildingDesc" class="text-xs text-slate-400 leading-relaxed">
+                    이 타일에는 아직 건설된 건물이 없습니다. (타일당 1개 건물 제한)
+                </p>
+            </div>
+
+            <!-- Tile Unit Info & Controls -->
+            <div id="modalUnitSection" class="hidden glass-card p-3.5 rounded-2xl border border-blue-500/40 bg-blue-950/20 space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span id="modalUnitIcon" class="text-2xl">⚔️</span>
+                        <div>
+                            <div id="modalUnitName" class="text-xs font-bold text-blue-200">전사</div>
+                            <div id="modalUnitStats" class="text-[11px] text-slate-400">체력: 100/100 | 공격력: 25</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button id="modalUpgradeUnitBtn" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition shadow-md flex items-center space-x-1">
+                            <span class="text-xs">⬆️</span>
+                            <span id="modalUpgradeBtnText">승급</span>
+                        </button>
+                        <button id="modalSelectUnitBtn" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition shadow-md flex items-center space-x-1">
+                            <span class="text-xs">🎯</span>
+                            <span>이동</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Unit Recruitment Section (If Capital or Barracks) -->
+            <div id="modalBarracksRecruitSection" class="hidden space-y-2">
+                <div class="text-xs font-extrabold text-indigo-300 flex items-center space-x-1.5">
+                    <span>🛡️</span>
+                    <span>유닛 훈련 및 소환</span>
+                </div>
+                <div id="unitRecruitList" class="grid grid-cols-1 gap-2"></div>
+            </div>
+
+            <!-- Buildables List Section (1 Building per Tile Limit) -->
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-extrabold text-amber-300 flex items-center space-x-1.5">
+                        <span>🔨</span>
+                        <span>건설 가능한 시설 (타일당 1개 제한)</span>
+                    </span>
+                    <span class="text-[10px] text-slate-400 font-semibold">소모 자재 및 기술 요구</span>
+                </div>
+
+                <div id="modalConstructionList" class="grid grid-cols-1 gap-2"></div>
+            </div>
+
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="p-3.5 bg-slate-900/90 border-t border-slate-800/80 flex justify-end">
+            <button id="closeTileModalFooterBtn" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition border border-slate-700">
+                창 닫기
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- TECH TREE MODAL -->
+<div id="techModalBackdrop" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-panel w-full max-w-4xl rounded-3xl border border-cyan-500/40 shadow-2xl flex flex-col h-[82vh] overflow-hidden animate-modal">
+        
+        <div class="p-4 md:p-5 border-b border-slate-800/90 flex items-center justify-between bg-gradient-to-r from-cyan-950/40 via-slate-900 to-slate-900">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xl border border-cyan-500/40">
+                    🗂️
+                </div>
+                <div>
+                    <h2 class="text-base md:text-lg font-extrabold text-cyan-100 serif-title">시드마이어 문명 테크트리</h2>
+                    <p class="text-xs font-semibold text-cyan-400/80">선행 연구를 완료해야 후속 기술을 개발할 수 있습니다.</p>
+                </div>
+            </div>
+            <button id="closeTechModalBtn" class="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center transition border border-slate-700 text-lg">
+                ✕
+            </button>
+        </div>
+
+        <div id="techTreeContainer" class="p-4 md:p-6 overflow-y-auto space-y-3.5 flex-1"></div>
+
+        <div id="techQuoteBox" class="p-3.5 bg-slate-900/90 border-t border-slate-800/80 flex items-center space-x-3 text-xs italic text-amber-300/90 font-serif">
+            <span class="text-amber-500 text-base not-italic">"</span>
+            <span id="techQuoteText">"지식에 대한 투자는 언제나 가장 정직한 이자를 보답한다." - 벤저민 프랭클린</span>
+        </div>
+    </div>
+</div>
+
+<!-- DIPLOMACY MODAL -->
+<div id="diplomacyModalBackdrop" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-panel w-full max-w-2xl rounded-3xl border border-indigo-500/40 shadow-2xl flex flex-col h-[75vh] overflow-hidden animate-modal">
+        <div class="p-4 md:p-5 border-b border-slate-800 flex items-center justify-between bg-gradient-to-r from-indigo-950/50 to-slate-900">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl border border-indigo-500/40">
+                    🤝
+                </div>
+                <div>
+                    <h2 class="text-base md:text-lg font-extrabold text-indigo-100 serif-title">세계 외교 정상 회담</h2>
+                    <p class="text-xs text-indigo-300">인근 상호국가들과 협정을 맺거나 전쟁을 선포할 수 있습니다.</p>
+                </div>
+            </div>
+            <button id="closeDiplomacyModalBtn" class="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center transition border border-slate-700 text-lg">
+                ✕
+            </button>
+        </div>
+
+        <div id="diplomacyListContainer" class="p-5 overflow-y-auto space-y-3 flex-1"></div>
+    </div>
+</div>
+
+<!-- TECH UNLOCKED CELEBRATION MODAL -->
+<div id="quoteModalBackdrop" class="fixed inset-0 bg-slate-950/85 backdrop-blur-lg z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-panel w-full max-w-lg rounded-3xl border border-yellow-500/50 shadow-2xl p-6 text-center space-y-4 animate-modal">
+        <div class="w-14 h-14 rounded-2xl bg-yellow-500/20 text-yellow-400 flex items-center justify-center text-3xl border border-yellow-500/40 mx-auto">
+            🏛️
+        </div>
+        <div>
+            <span class="text-xs font-bold text-amber-400 uppercase tracking-widest">기술 연구 완료!</span>
+            <h3 id="unlockedTechTitle" class="text-lg font-black text-slate-100 mt-1 serif-title">채광 기술</h3>
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs text-amber-200/90 italic font-serif leading-relaxed">
+            <span class="mr-2 text-amber-500">"</span>
+            <span id="unlockedTechQuote">"돌에서 쇠를 깎아내는 법을 배우는 순간..."</span>
+        </div>
+        <div id="unlockedTechReward" class="text-xs font-bold text-cyan-300">
+            새로운 해금: 광산 시설 건설 가능
+        </div>
+        <button id="closeQuoteModalBtn" class="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black text-xs shadow-lg hover:from-amber-400 hover:to-yellow-400 transition">
+            위대한 발전 계속하기
+        </button>
+    </div>
+</div>
+
+</div>
+<script>
+// Core Constants
+const GRID_SIZE = 20;
+const BASE_TILE_SIZE = 64;
+
+// Terrains
+const TERRAIN = {
+    GRASS: { id: 'GRASS', name: '초원', color: '#166534', wood: 2, stone: 0, iron: 0, gold: 1, sci: 0, icon: '🌱', walkable: true },
+    DESERT: { id: 'DESERT', name: '사막', color: '#a16207', wood: 0, stone: 1, iron: 0, gold: 3, sci: 0, icon: '🏜️', walkable: true },
+    FOREST: { id: 'FOREST', name: '숲', color: '#14532d', wood: 5, stone: 0, iron: 0, gold: 0, sci: 0, icon: '🌲', walkable: true },
+    MOUNTAIN: { id: 'MOUNTAIN', name: '산맥', color: '#475569', wood: 0, stone: 4, iron: 1, gold: 0, sci: 2, icon: '⛰️', walkable: false },
+    WATER: { id: 'WATER', name: '해양', color: '#0369a1', wood: 0, stone: 0, iron: 0, gold: 4, sci: 1, icon: '🌊', walkable: false }
+};
+
+// Tech Prerequisite Database
+const TECH_DATABASE = [
+    { id: 'AGRICULTURE', name: '농업', cost: 0, prereqs: [], era: '고대 시대', quote: '"인류가 땅에 씨앗을 심기 시작했을 때, 문명의 첫 장이 펼쳐졌다."', unlocksText: '농장 시설 건설' },
+    { id: 'POTTERY', name: '도자기', cost: 25, prereqs: ['AGRICULTURE'], era: '고대 시대', quote: '"흙을 구워 만든 그릇은 양식을 저장하고 마을을 지켜주었다."', unlocksText: '곡물창고 시설 건설' },
+    { id: 'MINING', name: '채광 기술', cost: 30, prereqs: ['AGRICULTURE'], era: '고대 시대', quote: '"산의 암석을 뚫고 깎아내며 인류는 금속의 시대로 진입했다."', unlocksText: '채석장/광산 건설' },
+    { id: 'ARCHERY', name: '궁술', cost: 35, prereqs: ['AGRICULTURE'], era: '고대 시대', quote: '"시위에서 떠난 화살은 멀리 떨어진 적의 심장을 꿰뚫는다."', unlocksText: '궁수 유닛 모집' },
+    { id: 'HORSEBACK', name: '기마술', cost: 45, prereqs: ['ARCHERY'], era: '고대 시대', quote: '"야생마를 길들이는 자는 전장의 바람이 될 수 있다."', unlocksText: '기병 유닛 모집' },
+    { id: 'MASONRY', name: '석조 건축', cost: 50, prereqs: ['MINING'], era: '고대 시대', quote: '"단단한 돌로 쌓은 성벽은 제국의 번영을 수호한다."', unlocksText: '수도 전용 고대 성벽 건설' },
+    { id: 'WRITING', name: '문자 발명', cost: 55, prereqs: ['POTTERY'], era: '고대 시대', quote: '"지식을 기록하는 자만이 역사를 지배하고 영원성을 얻는다."', unlocksText: '도서관 시설 건설' },
+    { id: 'BRONZE', name: '청동기 가공', cost: 70, prereqs: ['MINING'], era: '청동기 시대', quote: '"불꽃 속에서 단련된 단단한 무기는 전쟁의 방식을 바꾸었다."', unlocksText: '병영 시설 & 검사 승급' },
+    { id: 'IRON', name: '철기 기술', cost: 110, prereqs: ['BRONZE', 'WRITING'], era: '고전 시대', quote: '"철의 힘은 제국의 경계를 넓히고 단단한 도시를 빚어냈다."', unlocksText: '대장간 시설 건설' },
+    { id: 'GUNPOWDER', name: '화약 발명', cost: 170, prereqs: ['IRON'], era: '르네상스 시대', quote: '"연기와 굉음 속에서 기사들의 갑옷은 무의미해졌다."', unlocksText: '머스킷병 승급' },
+    { id: 'INDUSTRIAL', name: '산업 혁명', cost: 260, prereqs: ['GUNPOWDER'], era: '산업 시대', quote: '"증기 기관의 포효와 함께 기계와 공장의 시대가 도래했노라."', unlocksText: '공장 시설 & 현대 보병 승급' }
+];
+
+// Buildings (Single per Tile)
+const BUILDINGS = {
+    FARM: { id: 'FARM', name: '농장', reqTech: 'AGRICULTURE', costWood: 20, costStone: 0, costIron: 0, woodB: 2, stoneB: 0, ironB: 0, goldB: 1, sciB: 0, icon: '🌾', desc: '목재 +2, 골드 +1 산출' },
+    GRANARY: { id: 'GRANARY', name: '곡물창고', reqTech: 'POTTERY', costWood: 35, costStone: 10, costIron: 0, woodB: 3, stoneB: 1, ironB: 0, goldB: 1, sciB: 0, icon: '🏺', desc: '목재 +3, 석재 +1 산출' },
+    QUARRY: { id: 'QUARRY', name: '채석장', reqTech: 'MINING', costWood: 15, costStone: 25, costIron: 0, woodB: 0, stoneB: 4, ironB: 0, goldB: 0, sciB: 0, icon: '⛏️', desc: '석재 +4 산출' },
+    MINE: { id: 'MINE', name: '광산', reqTech: 'MINING', costWood: 30, costStone: 30, costIron: 0, woodB: 0, stoneB: 2, ironB: 3, goldB: 0, sciB: 0, icon: '⚒️', desc: '철광석 +3, 석재 +2 산출' },
+    LIBRARY: { id: 'LIBRARY', name: '도서관', reqTech: 'WRITING', costWood: 40, costStone: 20, costIron: 0, woodB: 0, stoneB: 0, ironB: 0, goldB: 0, sciB: 4, icon: '📚', desc: '과학 연구력 +4 산출' },
+    BARRACKS: { id: 'BARRACKS', name: '병영', reqTech: 'BRONZE', costWood: 50, costStone: 30, costIron: 5, woodB: 1, stoneB: 1, ironB: 0, goldB: 0, sciB: 0, icon: '🏰', desc: '이 타일에서 정예 유닛 모집 가능' },
+    FORGE: { id: 'FORGE', name: '대장간', reqTech: 'IRON', costWood: 40, costStone: 50, costIron: 15, woodB: 0, stoneB: 3, ironB: 5, goldB: 2, sciB: 0, icon: '⛓️', desc: '철광석 +5, 석재 +3 산출' },
+    FACTORY: { id: 'FACTORY', name: '공장', reqTech: 'INDUSTRIAL', costWood: 80, costStone: 80, costIron: 30, woodB: 8, stoneB: 8, ironB: 8, goldB: 4, sciB: 2, icon: '🏭', desc: '모든 자재 +8 산출' }
+};
+
+// Units Spec
+const UNITS = {
+    WARRIOR: { id: 'WARRIOR', name: '전사', hp: 100, atk: 25, speed: 2, range: 1, costWood: 20, costStone: 0, costIron: 0, reqTech: null, upgradeTo: 'SWORDSMAN', icon: '⚔️' },
+    ARCHER: { id: 'ARCHER', name: '궁수', hp: 70, atk: 22, speed: 2, range: 2, costWood: 25, costStone: 10, costIron: 0, reqTech: 'ARCHERY', upgradeTo: null, icon: '🏹' },
+    HORSEMAN: { id: 'HORSEMAN', name: '기병', hp: 110, atk: 32, speed: 3, range: 1, costWood: 35, costStone: 15, costIron: 0, reqTech: 'HORSEBACK', upgradeTo: null, icon: '🐎' },
+    SWORDSMAN: { id: 'SWORDSMAN', name: '검사', hp: 140, atk: 40, speed: 2, range: 1, costWood: 30, costStone: 15, costIron: 10, reqTech: 'BRONZE', upgradeTo: 'MUSKETMAN', icon: '🗡️' },
+    MUSKETMAN: { id: 'MUSKETMAN', name: '머스킷병', hp: 190, atk: 65, speed: 2, range: 1, costWood: 40, costStone: 20, costIron: 20, reqTech: 'GUNPOWDER', upgradeTo: 'INFANTRY', icon: '🔫' },
+    INFANTRY: { id: 'INFANTRY', name: '현대 보병', hp: 260, atk: 95, speed: 3, range: 1, costWood: 50, costStone: 40, costIron: 35, reqTech: 'INDUSTRIAL', upgradeTo: null, icon: '🪖' }
+};
+
+// State Variables
+let map = [];
+let isCapitalSet = false;
+let playerCivName = "대한 제국";
+let capitalTilePos = null;
+
+let playerResources = { wood: 100, stone: 50, iron: 0, gold: 60, science: 0 };
+let buildsThisTurn = 0;
+const MAX_BUILDS_PER_TURN = 3;
+let currentTurn = 1;
+
+let activeTechId = null;
+let techProgress = 0;
+let unlockedTechs = new Set(['AGRICULTURE']);
+
+let unitList = [];
+let selectedUnit = null;
+let activeModalTile = null;
+
+// Factions & Border Styling
+const FACTIONS = {
+    PLAYER: { name: '대한 제국', color: '#3b82f6', borderColor: '#60a5fa', isWar: false },
+    AI_ROME: { name: '로마 제국', color: '#ef4444', borderColor: '#f87171', isWar: false, r: 16, c: 16 },
+    AI_EGYPT: { name: '이집트 왕국', color: '#eab308', borderColor: '#fde047', isWar: false, r: 2, c: 17 }
+};
+
+// Camera Transform & Touch Drag Logic
+let camera = { x: 0, y: 0, zoom: 1.0 };
+let isDraggingMap = false;
+let dragStart = { x: 0, y: 0 };
+let mouseDownPos = { x: 0, y: 0 };
+let initialPinchDist = null;
+let initialZoom = 1.0;
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+function initMap() {
+    map = [];
+    for (let r = 0; r < GRID_SIZE; r++) {
+        let row = [];
+        for (let c = 0; c < GRID_SIZE; c++) {
+            let rand = Math.random();
+            let terrain = TERRAIN.GRASS;
+
+            if (rand < 0.12) terrain = TERRAIN.WATER;
+            else if (rand < 0.22) terrain = TERRAIN.MOUNTAIN;
+            else if (rand < 0.45) terrain = TERRAIN.FOREST;
+            else if (rand < 0.58) terrain = TERRAIN.DESERT;
+
+            row.push({
+                r: r, c: c,
+                terrain: terrain,
+                building: null,
+                owner: null,
+                isCapital: false,
+                hasWalls: false
+            });
+        }
+        map.push(row);
+    }
+
+    // Setup AI Capitals
+    setupAICapital('AI_ROME', FACTIONS.AI_ROME.r, FACTIONS.AI_ROME.c);
+    setupAICapital('AI_EGYPT', FACTIONS.AI_EGYPT.r, FACTIONS.AI_EGYPT.c);
+
+    recenterCameraOn(10, 10);
+}
+
+function setupAICapital(factionKey, cr, cc) {
+    for (let r = Math.max(0, cr - 1); r <= Math.min(GRID_SIZE - 1, cr + 1); r++) {
+        for (let c = Math.max(0, cc - 1); c <= Math.min(GRID_SIZE - 1, cc + 1); c++) {
+            map[r][c].owner = factionKey;
+            map[r][c].terrain = TERRAIN.GRASS;
+        }
+    }
+    map[cr][cc].isCapital = true;
+    spawnUnit('WARRIOR', cr, cc, factionKey);
+}
+
+function setupPlayerCapital(cr, cc) {
+    for (let r = Math.max(0, cr - 1); r <= Math.min(GRID_SIZE - 1, cr + 1); r++) {
+        for (let c = Math.max(0, cc - 1); c <= Math.min(GRID_SIZE - 1, cc + 1); c++) {
+            map[r][c].owner = 'PLAYER';
+            if (map[r][c].terrain.id === 'WATER' || map[r][c].terrain.id === 'MOUNTAIN') {
+                map[r][c].terrain = TERRAIN.GRASS;
+            }
+        }
+    }
+
+    map[cr][cc].isCapital = true;
+    capitalTilePos = { r: cr, c: cc };
+    isCapitalSet = true;
+
+    spawnUnit('WARRIOR', cr, cc, 'PLAYER');
+
+    document.getElementById('startPhaseOverlay').style.display = 'none';
+    document.getElementById('civNameDisplay').innerText = playerCivName;
+    FACTIONS.PLAYER.name = playerCivName;
+
+    recenterCameraOn(cr, cc);
+    showNotice(`👑 수도 [${playerCivName}] 창건 완료! 3x3 초기 영토가 수립되었습니다.`);
+}
+
+function spawnUnit(typeKey, r, c, owner) {
+    const spec = UNITS[typeKey];
+    const unit = {
+        id: Math.random().toString(36).substr(2, 9),
+        typeKey: typeKey,
+        name: spec.name,
+        hp: spec.hp,
+        maxHp: spec.hp,
+        atk: spec.atk,
+        maxSpeed: spec.speed,
+        remSpeed: spec.speed,
+        range: spec.range || 1,
+        r: r, c: c,
+        owner: owner,
+        icon: spec.icon
+    };
+    unitList.push(unit);
+    return unit;
+}
+
+function resizeCanvas() {
+    if (!canvas.parentElement) return;
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
+    renderMap();
+}
+
+function recenterCameraOn(r, c) {
+    const screenW = canvas.width;
+    const screenH = canvas.height;
+    camera.x = screenW / 2 - (c * BASE_TILE_SIZE + BASE_TILE_SIZE / 2) * camera.zoom;
+    camera.y = screenH / 2 - (r * BASE_TILE_SIZE + BASE_TILE_SIZE / 2) * camera.zoom;
+    renderMap();
+}
+
+function renderMap() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    ctx.translate(camera.x, camera.y);
+    ctx.scale(camera.zoom, camera.zoom);
+
+    // Draw Terrain & Buildings
+    for (let r = 0; r < GRID_SIZE; r++) {
+        for (let c = 0; c < GRID_SIZE; c++) {
+            const tile = map[r][c];
+            const x = c * BASE_TILE_SIZE;
+            const y = r * BASE_TILE_SIZE;
+
+            ctx.fillStyle = tile.terrain.color;
+            ctx.fillRect(x, y, BASE_TILE_SIZE, BASE_TILE_SIZE);
+
+            ctx.strokeStyle = 'rgba(15, 23, 42, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, BASE_TILE_SIZE, BASE_TILE_SIZE);
+
+            // Tile Icons
+            ctx.font = '22px serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            let displayIcon = tile.terrain.icon;
+            if (tile.isCapital) displayIcon = tile.hasWalls ? '🏰' : '🏛️';
+            else if (tile.building) displayIcon = tile.building.icon;
+
+            ctx.fillText(displayIcon, x + BASE_TILE_SIZE / 2, y + BASE_TILE_SIZE / 2);
+        }
+    }
+
+    // Draw Distinct Borders
+    for (let r = 0; r < GRID_SIZE; r++) {
+        for (let c = 0; c < GRID_SIZE; c++) {
+            const tile = map[r][c];
+            if (!tile.owner) continue;
+
+            const fac = FACTIONS[tile.owner];
+            const x = c * BASE_TILE_SIZE;
+            const y = r * BASE_TILE_SIZE;
+
+            ctx.fillStyle = fac.color + '33';
+            ctx.fillRect(x, y, BASE_TILE_SIZE, BASE_TILE_SIZE);
+
+            ctx.strokeStyle = fac.borderColor;
+            ctx.lineWidth = 3;
+
+            if (r === 0 || map[r-1][c].owner !== tile.owner) {
+                ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + BASE_TILE_SIZE, y); ctx.stroke();
+            }
+            if (r === GRID_SIZE-1 || map[r+1][c].owner !== tile.owner) {
+                ctx.beginPath(); ctx.moveTo(x, y + BASE_TILE_SIZE); ctx.lineTo(x + BASE_TILE_SIZE, y + BASE_TILE_SIZE); ctx.stroke();
+            }
+            if (c === 0 || map[r][c-1].owner !== tile.owner) {
+                ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + BASE_TILE_SIZE); ctx.stroke();
+            }
+            if (c === GRID_SIZE-1 || map[r][c+1].owner !== tile.owner) {
+                ctx.beginPath(); ctx.moveTo(x + BASE_TILE_SIZE, y); ctx.lineTo(x + BASE_TILE_SIZE, y + BASE_TILE_SIZE); ctx.stroke();
+            }
+        }
+    }
+
+    // Unit Movement Reach Highlight
+    if (selectedUnit && selectedUnit.owner === 'PLAYER') {
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                const dist = Math.abs(r - selectedUnit.r) + Math.abs(c - selectedUnit.c);
+                if (dist > 0 && dist <= selectedUnit.remSpeed && map[r][c].terrain.walkable) {
+                    const x = c * BASE_TILE_SIZE;
+                    const y = r * BASE_TILE_SIZE;
+                    ctx.fillStyle = 'rgba(34, 197, 94, 0.35)';
+                    ctx.fillRect(x + 2, y + 2, BASE_TILE_SIZE - 4, BASE_TILE_SIZE - 4);
+                    ctx.strokeStyle = '#4ade80';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(x + 2, y + 2, BASE_TILE_SIZE - 4, BASE_TILE_SIZE - 4);
+                }
+            }
+        }
+    }
+
+    // Render Units
+    unitList.forEach(u => {
+        const x = u.c * BASE_TILE_SIZE;
+        const y = u.r * BASE_TILE_SIZE;
+
+        if (selectedUnit && selectedUnit.id === u.id) {
+            ctx.beginPath();
+            ctx.arc(x + BASE_TILE_SIZE / 2, y + BASE_TILE_SIZE / 2, BASE_TILE_SIZE / 2 - 2, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(250, 204, 21, 0.45)';
+            ctx.fill();
+            ctx.strokeStyle = '#facc15';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+
+        ctx.beginPath();
+        ctx.arc(x + BASE_TILE_SIZE / 2, y + BASE_TILE_SIZE / 2, BASE_TILE_SIZE / 2.6, 0, Math.PI * 2);
+        ctx.fillStyle = u.owner === 'PLAYER' ? 'rgba(30, 58, 138, 0.9)' : 'rgba(153, 27, 27, 0.9)';
+        ctx.fill();
+        ctx.strokeStyle = u.owner === 'PLAYER' ? '#60a5fa' : '#f87171';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.font = '18px serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(u.icon, x + BASE_TILE_SIZE / 2, y + BASE_TILE_SIZE / 2);
+
+        const hpRatio = u.hp / u.maxHp;
+        ctx.fillStyle = 'rgba(0,0,0,0.65)';
+        ctx.fillRect(x + 6, y + BASE_TILE_SIZE - 9, BASE_TILE_SIZE - 12, 5);
+        ctx.fillStyle = hpRatio > 0.5 ? '#22c55e' : '#ef4444';
+        ctx.fillRect(x + 6, y + BASE_TILE_SIZE - 9, (BASE_TILE_SIZE - 12) * hpRatio, 5);
+    });
+
+    ctx.restore();
+}
+
+// Mouse Pan Handlers
+canvas.addEventListener('mousedown', (e) => {
+    isDraggingMap = true;
+    dragStart = { x: e.clientX - camera.x, y: e.clientY - camera.y };
+    mouseDownPos = { x: e.clientX, y: e.clientY };
+});
+
+window.addEventListener('mousemove', (e) => {
+    if (isDraggingMap) {
+        camera.x = e.clientX - dragStart.x;
+        camera.y = e.clientY - dragStart.y;
+        renderMap();
+    }
+});
+
+window.addEventListener('mouseup', (e) => {
+    if (!isDraggingMap) return;
+    isDraggingMap = false;
+
+    const movedDist = Math.hypot(e.clientX - mouseDownPos.x, e.clientY - mouseDownPos.y);
+    if (movedDist < 6) {
+        handlePointerSelect(e.clientX, e.clientY);
+    }
+});
+
+// Touch Pinch Handlers
+canvas.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+        isDraggingMap = true;
+        dragStart = { x: e.touches[0].clientX - camera.x, y: e.touches[0].clientY - camera.y };
+        mouseDownPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    } else if (e.touches.length === 2) {
+        isDraggingMap = false;
+        initialPinchDist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+        );
+        initialZoom = camera.zoom;
+    }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (e.touches.length === 1 && isDraggingMap) {
+        camera.x = e.touches[0].clientX - dragStart.x;
+        camera.y = e.touches[0].clientY - dragStart.y;
+        renderMap();
+    } else if (e.touches.length === 2 && initialPinchDist) {
+        const dist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+        );
+        const scale = dist / initialPinchDist;
+        camera.zoom = Math.max(0.5, Math.min(2.5, initialZoom * scale));
+        renderMap();
+    }
+}, { passive: false });
+
+canvas.addEventListener('touchend', (e) => {
+    if (e.touches.length === 0) {
+        if (isDraggingMap && e.changedTouches.length > 0) {
+            const t = e.changedTouches[0];
+            const movedDist = Math.hypot(t.clientX - mouseDownPos.x, t.clientY - mouseDownPos.y);
+            if (movedDist < 8) {
+                handlePointerSelect(t.clientX, t.clientY);
+            }
+        }
+        isDraggingMap = false;
+        initialPinchDist = null;
+    }
+});
+
+canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const zoomDelta = e.deltaY < 0 ? 1.12 : 0.88;
+    camera.zoom = Math.max(0.5, Math.min(2.5, camera.zoom * zoomDelta));
+    renderMap();
+}, { passive: false });
+
+function handlePointerSelect(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = clientX - rect.left;
+    const mouseY = clientY - rect.top;
+
+    const worldX = (mouseX - camera.x) / camera.zoom;
+    const worldY = (mouseY - camera.y) / camera.zoom;
+
+    const c = Math.floor(worldX / BASE_TILE_SIZE);
+    const r = Math.floor(worldY / BASE_TILE_SIZE);
+
+    if (r < 0 || r >= GRID_SIZE || c < 0 || c >= GRID_SIZE) return;
+
+    const targetTile = map[r][c];
+
+    if (!isCapitalSet) {
+        // Check distance from AI capitals
+        const distRome = Math.hypot(r - FACTIONS.AI_ROME.r, c - FACTIONS.AI_ROME.c);
+        const distEgypt = Math.hypot(r - FACTIONS.AI_EGYPT.r, c - FACTIONS.AI_EGYPT.c);
+
+        if (distRome < 3.5 || distEgypt < 3.5) {
+            showNotice('⚠️ 다른 국가 수도 근처에는 수도를 건설할 수 없습니다!');
+            return;
+        }
+
+        activeModalTile = targetTile;
+        document.getElementById('capitalModalBackdrop').classList.remove('hidden');
+        return;
+    }
+
+    const unitOnTile = unitList.find(u => u.r === r && u.c === c);
+
+    // Unit Movement / Attack Order
+    if (selectedUnit && selectedUnit.owner === 'PLAYER') {
+        const dist = Math.abs(r - selectedUnit.r) + Math.abs(c - selectedUnit.c);
+
+        // Range Attack Execution
+        if (dist > 0 && dist <= selectedUnit.range && unitOnTile && unitOnTile.owner !== 'PLAYER') {
+            executeAttack(selectedUnit, unitOnTile);
+            selectedUnit = null;
+            renderMap();
+            return;
+        }
+
+        // Normal Melee Movement
+        if (dist > 0 && dist <= selectedUnit.remSpeed && targetTile.terrain.walkable) {
+            if (!unitOnTile) {
+                selectedUnit.r = r;
+                selectedUnit.c = c;
+                selectedUnit.remSpeed -= dist;
+                showNotice(`${selectedUnit.name} 이동 완료! (남은 이동력: ${selectedUnit.remSpeed})`);
+                selectedUnit = null;
+                renderMap();
+                return;
+            }
+        }
+    }
+
+    openTileModal(targetTile, unitOnTile);
+}
+
+function openTileModal(tile, unitOnTile) {
+    activeModalTile = tile;
+    document.getElementById('tileModalBackdrop').classList.remove('hidden');
+
+    document.getElementById('modalTileIcon').innerText = tile.isCapital ? '🏛️' : tile.terrain.icon;
+    document.getElementById('modalTileTitle').innerText = `${tile.isCapital ? '제국 수도' : tile.terrain.name} 타일 (X:${tile.c}, Y:${tile.r})`;
+    
+    const ownerLabel = tile.owner === 'PLAYER' ? `소유주: ${playerCivName}` :
+                      tile.owner ? `소유주: ${FACTIONS[tile.owner].name}` : '소유주: 미개척 야생지';
+    document.getElementById('modalTileOwner').innerText = ownerLabel;
+
+    let w = tile.terrain.wood, s = tile.terrain.stone, i = tile.terrain.iron, g = tile.terrain.gold, sc = tile.terrain.sci;
+    if (tile.isCapital) { w += 3; g += 2; }
+    if (tile.building) {
+        w += tile.building.woodB; s += tile.building.stoneB; i += tile.building.ironB;
+        g += tile.building.goldB; sc += tile.building.sciB;
+    }
+
+    document.getElementById('modalYieldWood').innerText = `+${w}`;
+    document.getElementById('modalYieldStone').innerText = `+${s}`;
+    document.getElementById('modalYieldGold').innerText = `+${g}`;
+    document.getElementById('modalYieldSci').innerText = `+${sc}`;
+
+    const badge = document.getElementById('modalBuildingBadge');
+    const desc = document.getElementById('modalBuildingDesc');
+
+    if (tile.isCapital) {
+        badge.innerText = '제국 수도 (농장+병영 내장)';
+        badge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40";
+        desc.innerText = tile.hasWalls ? '수도 고대 성벽이 구축되어 최고 레벨 방어력을 보유합니다.' : '제국의 수도입니다. 기본적으로 농장과 병영 역할을 겸합니다.';
+    } else if (tile.building) {
+        badge.innerText = tile.building.name;
+        badge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40";
+        desc.innerText = `${tile.building.name}: ${tile.building.desc}`;
+    } else {
+        badge.innerText = '건물 없음';
+        badge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700";
+        desc.innerText = '이 타일에는 아직 건설된 건물이 없습니다. (타일당 1개 제한)';
+    }
+
+    // Unit Section
+    const unitSec = document.getElementById('modalUnitSection');
+    if (unitOnTile) {
+        unitSec.classList.remove('hidden');
+        document.getElementById('modalUnitIcon').innerText = unitOnTile.icon;
+        document.getElementById('modalUnitName').innerText = `${unitOnTile.owner === 'PLAYER' ? '[아군]' : '[적군]'} ${unitOnTile.name}`;
+        document.getElementById('modalUnitStats').innerText = `체력: ${unitOnTile.hp}/${unitOnTile.maxHp} | 공격력: ${unitOnTile.atk}`;
+
+        const selectBtn = document.getElementById('modalSelectUnitBtn');
+        const upgradeBtn = document.getElementById('modalUpgradeUnitBtn');
+
+        if (unitOnTile.owner === 'PLAYER') {
+            selectBtn.style.display = 'inline-flex';
+            selectBtn.onclick = () => {
+                selectedUnit = unitOnTile;
+                closeTileModal();
+                showNotice(`${unitOnTile.name} 유닛이 선택되었습니다.`);
+                renderMap();
+            };
+
+            const spec = UNITS[unitOnTile.typeKey];
+            if (spec && spec.upgradeTo) {
+                const nextSpec = UNITS[spec.upgradeTo];
+                const isTechUnlocked = !nextSpec.reqTech || unlockedTechs.has(nextSpec.reqTech);
+
+                upgradeBtn.style.display = 'inline-flex';
+                document.getElementById('modalUpgradeBtnText').innerText = `${nextSpec.name} 승급`;
+                
+                upgradeBtn.onclick = () => {
+                    if (!isTechUnlocked) {
+                        showNotice(`⚠️ 필요 기술([${nextSpec.reqTech}])을 먼저 연구하세요.`);
+                        return;
+                    }
+                    if (playerResources.wood < nextSpec.costWood || playerResources.stone < nextSpec.costStone || playerResources.iron < nextSpec.costIron) {
+                        showNotice('⚠️ 승급 자재가 부족합니다.');
+                        return;
+                    }
+                    playerResources.wood -= nextSpec.costWood;
+                    playerResources.stone -= nextSpec.costStone;
+                    playerResources.iron -= nextSpec.costIron;
+
+                    unitOnTile.typeKey = nextSpec.id;
+                    unitOnTile.name = nextSpec.name;
+                    unitOnTile.maxHp = nextSpec.hp;
+                    unitOnTile.hp = nextSpec.hp;
+                    unitOnTile.atk = nextSpec.atk;
+                    unitOnTile.icon = nextSpec.icon;
+
+                    updateResourceUI();
+                    openTileModal(tile, unitOnTile);
+                    showNotice(`🎉 ${nextSpec.name}(으)로 승급 완료!`);
+                    renderMap();
+                };
+            } else {
+                upgradeBtn.style.display = 'none';
+            }
+        } else {
+            selectBtn.style.display = 'none';
+            upgradeBtn.style.display = 'none';
+        }
+    } else {
+        unitSec.classList.add('hidden');
+    }
+
+    renderModalConstructionList(tile);
+    renderModalBarracksRecruiting(tile);
+}
+
+function closeTileModal() {
+    document.getElementById('tileModalBackdrop').classList.add('hidden');
+    activeModalTile = null;
+}
+
+function renderModalConstructionList(tile) {
+    const container = document.getElementById('modalConstructionList');
+    container.innerHTML = '';
+
+    if (tile.owner !== 'PLAYER') {
+        container.innerHTML = `<div class="p-3 text-center text-xs text-slate-500 italic bg-slate-900/50 rounded-2xl border border-slate-800">아군 영토 타일에만 건설할 수 있습니다.</div>`;
+        return;
+    }
+
+    // Special Capital Wall Construction
+    if (tile.isCapital) {
+        const wallUnlocked = unlockedTechs.has('MASONRY');
+        const card = document.createElement('div');
+        card.className = `glass-card p-2.5 rounded-2xl border flex items-center justify-between ${tile.hasWalls ? 'border-amber-500/50 bg-amber-950/20' : 'border-slate-800/80'}`;
+        card.innerHTML = `
+            <div class="flex items-center space-x-2.5">
+                <div class="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-lg">🛡️</div>
+                <div>
+                    <div class="text-xs font-bold text-slate-100">수도 고대 성벽</div>
+                    <div class="text-[10px] text-slate-400">수도 방어력 강화 및 내구도 상승</div>
+                    <div class="text-[9px] font-semibold text-amber-300 mt-0.5">비용: 🪵30 🪨50</div>
+                </div>
+            </div>
+            <div>
+                ${tile.hasWalls ? `<span class="px-2.5 py-1 rounded-xl bg-amber-500/20 text-amber-300 text-[10px] font-bold border border-amber-500/40">건설됨</span>` :
+                  !wallUnlocked ? `<span class="px-2.5 py-1 rounded-xl bg-slate-800 text-slate-500 text-[10px] font-bold border border-slate-700">석조 건축 필요</span>` :
+                  `<button onclick="buildCapitalWalls()" class="px-3 py-1 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition">건설</button>`}
+            </div>
+        `;
+        container.appendChild(card);
+    }
+
+    Object.keys(BUILDINGS).forEach(bKey => {
+        const b = BUILDINGS[bKey];
+        const isAlreadyBuilt = tile.building && tile.building.id === b.id;
+        const isTechUnlocked = !b.reqTech || unlockedTechs.has(b.reqTech);
+        const canAfford = playerResources.wood >= b.costWood && playerResources.stone >= b.costStone && playerResources.iron >= b.costIron;
+        const buildsAvailable = buildsThisTurn < MAX_BUILDS_PER_TURN;
+        const tileHasOtherBuilding = tile.building !== null && tile.building.id !== b.id;
+
+        const card = document.createElement('div');
+        card.className = `glass-card p-2.5 rounded-2xl border flex items-center justify-between ${isAlreadyBuilt ? 'border-amber-500/50 bg-amber-950/20' : 'border-slate-800/80'}`;
+
+        card.innerHTML = `
+            <div class="flex items-center space-x-2.5">
+                <div class="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-lg">${b.icon}</div>
+                <div>
+                    <div class="text-xs font-bold text-slate-100">${b.name}</div>
+                    <div class="text-[10px] text-slate-400 leading-tight">${b.desc}</div>
+                    <div class="text-[9px] font-semibold text-amber-300 mt-0.5">비용: 🪵${b.costWood} 🪨${b.costStone} ⚙️${b.costIron}</div>
+                </div>
+            </div>
+            <div>
+                ${isAlreadyBuilt ? `<span class="px-2.5 py-1 rounded-xl bg-amber-500/20 text-amber-300 text-[10px] font-bold border border-amber-500/40">건설됨</span>` :
+                  tileHasOtherBuilding ? `<span class="px-2.5 py-1 rounded-xl bg-slate-800 text-slate-500 text-[10px] font-bold border border-slate-700">1타일 1건물 제한</span>` :
+                  !isTechUnlocked ? `<span class="px-2.5 py-1 rounded-xl bg-slate-800 text-slate-500 text-[10px] font-bold border border-slate-700">미해금</span>` :
+                  `<button onclick="executeBuildInModal('${bKey}')" ${(!canAfford || !buildsAvailable) ? 'disabled' : ''} class="px-3 py-1 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:bg-slate-800 disabled:text-slate-600 text-slate-950 font-bold text-xs transition">
+                      건설
+                  </button>`}
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+window.buildCapitalWalls = function() {
+    if (!activeModalTile || !activeModalTile.isCapital) return;
+    if (playerResources.wood < 30 || playerResources.stone < 50) {
+        showNotice('⚠️ 성벽 자재(목재 30, 석재 50)가 부족합니다.');
+        return;
+    }
+    playerResources.wood -= 30;
+    playerResources.stone -= 50;
+    activeModalTile.hasWalls = true;
+    updateResourceUI();
+    openTileModal(activeModalTile, unitList.find(u => u.r === activeModalTile.r && u.c === activeModalTile.c));
+    showNotice('🛡️ 수도 고대 성벽이 완공되었습니다!');
+    renderMap();
+};
+
+window.executeBuildInModal = function(buildingKey) {
+    if (!activeModalTile) return;
+    const b = BUILDINGS[buildingKey];
+
+    if (buildsThisTurn >= MAX_BUILDS_PER_TURN) {
+        showNotice('⚠️ 이번 턴 건설 한도(3회)를 초과했습니다.');
+        return;
+    }
+    if (activeModalTile.building !== null) {
+        showNotice('⚠️ 하나의 타일에는 하나의 시설만 지을 수 있습니다!');
+        return;
+    }
+    if (playerResources.wood < b.costWood || playerResources.stone < b.costStone || playerResources.iron < b.costIron) {
+        showNotice('⚠️ 건설 자재가 부족합니다.');
+        return;
+    }
+
+    playerResources.wood -= b.costWood;
+    playerResources.stone -= b.costStone;
+    playerResources.iron -= b.costIron;
+
+    buildsThisTurn++;
+    activeModalTile.building = b;
+
+    updateResourceUI();
+    openTileModal(activeModalTile, unitList.find(u => u.r === activeModalTile.r && u.c === activeModalTile.c));
+    showNotice(`🎉 ${b.name} 시설 건설 완료! (${buildsThisTurn}/${MAX_BUILDS_PER_TURN})`);
+    renderMap();
+};
+
+function renderModalBarracksRecruiting(tile) {
+    const section = document.getElementById('modalBarracksRecruitSection');
+    const list = document.getElementById('unitRecruitList');
+    list.innerHTML = '';
+
+    const canRecruit = tile.isCapital || (tile.building && tile.building.id === 'BARRACKS');
+    if (!canRecruit) {
+        section.classList.add('hidden');
+        return;
+    }
+
+    section.classList.remove('hidden');
+
+    Object.keys(UNITS).forEach(uKey => {
+        const uSpec = UNITS[uKey];
+        const isTechUnlocked = !uSpec.reqTech || unlockedTechs.has(uSpec.reqTech);
+        const canAfford = playerResources.wood >= uSpec.costWood && playerResources.stone >= uSpec.costStone && playerResources.iron >= uSpec.costIron;
+
+        const item = document.createElement('div');
+        item.className = 'glass-card p-2 rounded-xl border border-slate-800 flex items-center justify-between';
+
+        item.innerHTML = `
+            <div class="flex items-center space-x-2.5">
+                <div class="w-8 h-8 rounded-lg bg-blue-950 border border-blue-500/40 flex items-center justify-center text-sm">${uSpec.icon}</div>
+                <div>
+                    <div class="text-xs font-bold text-slate-200">${uSpec.name}</div>
+                    <div class="text-[9px] text-slate-400">비용: 🪵${uSpec.costWood} 🪨${uSpec.costStone} ⚙️${uSpec.costIron}</div>
+                </div>
+            </div>
+            <button onclick="trainUnitInBarracks('${uKey}')" ${(!isTechUnlocked || !canAfford) ? 'disabled' : ''} class="px-3 py-1 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-600 text-white font-bold text-xs transition">
+                소환
+            </button>
+        `;
+        list.appendChild(item);
+    });
+}
+
+window.trainUnitInBarracks = function(unitKey) {
+    if (!activeModalTile) return;
+    const uSpec = UNITS[unitKey];
+
+    if (playerResources.wood < uSpec.costWood || playerResources.stone < uSpec.costStone || playerResources.iron < uSpec.costIron) {
+        showNotice('⚠️ 자재가 부족합니다.');
+        return;
+    }
+
+    const existingUnit = unitList.find(u => u.r === activeModalTile.r && u.c === activeModalTile.c);
+    if (existingUnit) {
+        showNotice('⚠️ 해당 타일에 이미 다른 유닛이 존재합니다.');
+        return;
+    }
+
+    playerResources.wood -= uSpec.costWood;
+    playerResources.stone -= uSpec.costStone;
+    playerResources.iron -= uSpec.costIron;
+
+    spawnUnit(unitKey, activeModalTile.r, activeModalTile.c, 'PLAYER');
+
+    updateResourceUI();
+    closeTileModal();
+    showNotice(`🛡️ ${uSpec.name} 유닛이 훈련되어 배치되었습니다!`);
+    renderMap();
+};
+
+function executeAttack(attacker, defender) {
+    defender.hp -= attacker.atk;
+    showNotice(`⚔️ 전투! ${attacker.name}가 ${defender.name}에게 ${attacker.atk} 피해!`);
+
+    if (defender.hp <= 0) {
+        showNotice(`💥 적 유닛 ${defender.name} 격파!`);
+        unitList = unitList.filter(u => u.id !== defender.id);
+        attacker.r = defender.r;
+        attacker.c = defender.c;
+    } else {
+        if (attacker.range === 1) {
+            attacker.hp -= Math.floor(defender.atk * 0.5);
+            if (attacker.hp <= 0) {
+                showNotice(`☠️ 아군 유닛 ${attacker.name}가 전사했습니다.`);
+                unitList = unitList.filter(u => u.id !== attacker.id);
+            }
+        }
+    }
+}
+
+// Diplomacy Modal Render
+function openDiplomacyModal() {
+    document.getElementById('diplomacyModalBackdrop').classList.remove('hidden');
+    const container = document.getElementById('diplomacyListContainer');
+    container.innerHTML = '';
+
+    Object.keys(FACTIONS).forEach(fKey => {
+        if (fKey === 'PLAYER') return;
+        const fac = FACTIONS[fKey];
+
+        const card = document.createElement('div');
+        card.className = 'glass-card p-4 rounded-2xl border border-slate-800 flex items-center justify-between';
+
+        card.innerHTML = `
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xl" style="background-color:${fac.color}33; border: 1px solid ${fac.borderColor}">🏛️</div>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-100">${fac.name}</h3>
+                    <span class="text-xs font-semibold ${fac.isWar ? 'text-rose-400' : 'text-emerald-400'}">${fac.isWar ? '⚔️ 전쟁 중' : '🕊️ 평화 상태'}</span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                ${fac.isWar ? `<button onclick="toggleWarStatus('${fKey}', false)" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition">평화 협정</button>` :
+                  `<button onclick="toggleWarStatus('${fKey}', true)" class="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition">선전포고</button>`}
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+window.toggleWarStatus = function(fKey, declareWar) {
+    FACTIONS[fKey].isWar = declareWar;
+    openDiplomacyModal();
+    showNotice(declareWar ? `⚔️ [${FACTIONS[fKey].name}]에게 선전포고했습니다!` : `🕊️ [${FACTIONS[fKey].name}]와 평화 협정을 체결했습니다.`);
+};
+
+function openTechModal() {
+    document.getElementById('techModalBackdrop').classList.remove('hidden');
+    renderTechTreeNodes();
+}
+
+function closeTechModal() {
+    document.getElementById('techModalBackdrop').classList.add('hidden');
+}
+
+function renderTechTreeNodes() {
+    const container = document.getElementById('techTreeContainer');
+    container.innerHTML = '';
+
+    TECH_DATABASE.forEach(tech => {
+        const isUnlocked = unlockedTechs.has(tech.id);
+        const isResearching = activeTechId === tech.id;
+        const prereqsMet = tech.prereqs.every(reqId => unlockedTechs.has(reqId));
+
+        const node = document.createElement('div');
+        node.className = `glass-card p-3.5 rounded-2xl border transition flex items-center justify-between ${
+            isResearching ? 'border-cyan-400 bg-cyan-950/40 glow-tech' :
+            isUnlocked ? 'border-emerald-500/50 bg-emerald-950/20' :
+            prereqsMet ? 'border-blue-500/40 bg-slate-900/80' :
+            'border-slate-800 opacity-60 bg-slate-950/60'
+        }`;
+
+        node.innerHTML = `
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl ${isUnlocked ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : prereqsMet ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40' : 'bg-slate-800 text-slate-500 border-slate-700'} border flex items-center justify-center text-base font-bold">
+                    ${isUnlocked ? '✓' : '⚛️'}
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <h3 class="text-xs font-extrabold text-slate-100">${tech.name}</h3>
+                        <span class="text-[9px] px-2 py-0.5 rounded bg-slate-800 text-slate-400">${tech.era}</span>
+                    </div>
+                    <p class="text-[11px] text-cyan-300 font-medium mt-0.5">해금: ${tech.unlocksText}</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="text-[11px] font-bold text-slate-300 mb-1.5">필요 과학: ${tech.cost}</div>
+                ${isUnlocked ? `<span class="px-3 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/40">연구 완료</span>` :
+                  isResearching ? `<span class="px-3 py-1 rounded-xl bg-cyan-500/20 text-cyan-300 text-[10px] font-bold border border-cyan-500/40">진행 중</span>` :
+                  !prereqsMet ? `<span class="px-3 py-1 rounded-xl bg-slate-800 text-slate-500 text-[10px] font-bold border border-slate-700">선행 필요</span>` :
+                  `<button onclick="selectTechForResearch('${tech.id}')" class="px-3 py-1 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs transition">연구 시작</button>`}
+            </div>
+        `;
+
+        node.onclick = () => { document.getElementById('techQuoteText').innerText = `${tech.quote}`; };
+        container.appendChild(node);
+    });
+}
+
+window.selectTechForResearch = function(techId) {
+    const tech = TECH_DATABASE.find(t => t.id === techId);
+    if (!tech) return;
+
+    const prereqsMet = tech.prereqs.every(reqId => unlockedTechs.has(reqId));
+    if (!prereqsMet) {
+        showNotice('⚠️ 선행 기술 연구를 먼저 완료해야 합니다!');
+        return;
+    }
+
+    activeTechId = techId;
+    showNotice(`🔬 연구 지정: [${tech.name}]`);
+    renderTechTreeNodes();
+    updateResearchWidget();
+};
+
+function updateResearchWidget() {
+    const nameEl = document.getElementById('researchTechName');
+    const barEl = document.getElementById('researchProgressBar');
+
+    if (!activeTechId) {
+        nameEl.innerText = '연구 선택 필요';
+        barEl.style.width = '0%';
+        return;
+    }
+
+    const tech = TECH_DATABASE.find(t => t.id === activeTechId);
+    nameEl.innerText = `${tech.name} (${techProgress}/${tech.cost})`;
+    const pct = Math.min(100, (techProgress / tech.cost) * 100);
+    barEl.style.width = `${pct}%`;
+}
+
+const BASE_SCIENCE_PER_TURN = 5;
+
+function calculateYields() {
+    let w = 0, s = 0, i = 0, g = 0, sc = isCapitalSet ? BASE_SCIENCE_PER_TURN : 0;
+
+    for (let r = 0; r < GRID_SIZE; r++) {
+        for (let c = 0; c < GRID_SIZE; c++) {
+            const tile = map[r][c];
+            if (tile.owner === 'PLAYER') {
+                w += tile.terrain.wood; s += tile.terrain.stone; i += tile.terrain.iron;
+                g += tile.terrain.gold; sc += tile.terrain.sci;
+
+                if (tile.isCapital) { w += 3; g += 2; }
+                if (tile.building) {
+                    w += tile.building.woodB; s += tile.building.stoneB; i += tile.building.ironB;
+                    g += tile.building.goldB; sc += tile.building.sciB;
+                }
+            }
+        }
+    }
+
+    return { w, s, i, g, sc };
+}
+
+function updateResourceUI() {
+    const y = calculateYields();
+
+    document.getElementById('resWood').innerText = playerResources.wood;
+    document.getElementById('rateWood').innerText = `(+${y.w})`;
+
+    document.getElementById('resStone').innerText = playerResources.stone;
+    document.getElementById('rateStone').innerText = `(+${y.s})`;
+
+    document.getElementById('resIron').innerText = playerResources.iron;
+    document.getElementById('rateIron').innerText = `(+${y.i})`;
+
+    document.getElementById('resGold').innerText = playerResources.gold;
+    document.getElementById('rateGold').innerText = `(+${y.g})`;
+
+    document.getElementById('resScience').innerText = playerResources.science;
+    document.getElementById('rateScience').innerText = `(+${y.sc})`;
+
+    document.getElementById('buildsThisTurn').innerText = buildsThisTurn;
+    document.getElementById('turnCounter').innerText = `턴 ${currentTurn}`;
+
+    updateResearchWidget();
+}
+
+const EXPANSION_INTERVAL_TURNS = 2;
+
+function expandTerritory() {
+    const candidates = [];
+    const seen = new Set();
+
+    for (let r = 0; r < GRID_SIZE; r++) {
+        for (let c = 0; c < GRID_SIZE; c++) {
+            if (map[r][c].owner !== 'PLAYER') continue;
+
+            const neighbors = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]];
+            neighbors.forEach(([nr, nc]) => {
+                if (nr < 0 || nr >= GRID_SIZE || nc < 0 || nc >= GRID_SIZE) return;
+                const key = `${nr}_${nc}`;
+                if (seen.has(key)) return;
+
+                const neighborTile = map[nr][nc];
+                if (!neighborTile.owner) {
+                    seen.add(key);
+                    candidates.push(neighborTile);
+                }
+            });
+        }
+    }
+
+    if (candidates.length === 0) return;
+
+    const pick = candidates[Math.floor(Math.random() * candidates.length)];
+    pick.owner = 'PLAYER';
+    showNotice(`🗺️ 영토가 자연 확장되었습니다! (${pick.terrain.name} 타일 편입)`);
+}
+
+function processEndTurn() {
+    currentTurn++;
+    buildsThisTurn = 0;
+
+    const y = calculateYields();
+    playerResources.wood += y.w;
+    playerResources.stone += y.s;
+    playerResources.iron += y.i;
+    playerResources.gold += y.g;
+    playerResources.science += y.sc;
+
+    if (activeTechId) {
+        techProgress += y.sc;
+        const tech = TECH_DATABASE.find(t => t.id === activeTechId);
+        if (techProgress >= tech.cost) {
+            unlockedTechs.add(tech.id);
+            triggerTechUnlockModal(tech);
+            activeTechId = null;
+            techProgress = 0;
+        }
+    }
+
+    unitList.forEach(u => { u.remSpeed = u.maxSpeed; });
+
+    // Passive Territory Expansion (1 random adjacent tile every 2 turns)
+    if (isCapitalSet && currentTurn % EXPANSION_INTERVAL_TURNS === 0) {
+        expandTerritory();
+    }
+
+    // AI Turn Action
+    runAITurn();
+
+    updateResourceUI();
+    renderMap();
+    showNotice(`턴 ${currentTurn} 시작! (+🪵${y.w}, +🪨${y.s}, +🔬${y.sc})`);
+}
+
+function runAITurn() {
+    Object.keys(FACTIONS).forEach(fKey => {
+        if (fKey === 'PLAYER') return;
+
+        // Spawn AI Units occasionally
+        if (currentTurn % 4 === 0) {
+            const fac = FACTIONS[fKey];
+            const existingOnTile = unitList.find(u => u.r === fac.r && u.c === fac.c);
+            if (!existingOnTile) {
+                spawnUnit(currentTurn > 10 ? 'SWORDSMAN' : 'WARRIOR', fac.r, fac.c, fKey);
+            }
+        }
+    });
+}
+
+function triggerTechUnlockModal(tech) {
+    document.getElementById('unlockedTechTitle').innerText = tech.name;
+    document.getElementById('unlockedTechQuote').innerText = tech.quote;
+    document.getElementById('unlockedTechReward').innerText = `새로운 해금: ${tech.unlocksText}`;
+    document.getElementById('quoteModalBackdrop').classList.remove('hidden');
+}
+
+let noticeTimer = null;
+function showNotice(msg) {
+    const banner = document.getElementById('noticeBanner');
+    document.getElementById('noticeText').innerText = msg;
+    banner.classList.remove('hidden');
+
+    if (noticeTimer) clearTimeout(noticeTimer);
+    noticeTimer = setTimeout(() => { banner.classList.add('hidden'); }, 3200);
+}
+
+window.addEventListener('load', () => {
+    initMap();
+    resizeCanvas();
+    updateResourceUI();
+
+    window.addEventListener('resize', resizeCanvas);
+
+    // Setup Capital Modal Listener
+    document.getElementById('confirmCapitalBtn').onclick = () => {
+        const nameInput = document.getElementById('civNameInput').value.trim();
+        if (nameInput) playerCivName = nameInput;
+        if (activeModalTile) {
+            setupPlayerCapital(activeModalTile.r, activeModalTile.c);
+            document.getElementById('capitalModalBackdrop').classList.add('hidden');
+        }
+    };
+
+    // Modal Controls
+    document.getElementById('closeTileModalBtn').onclick = closeTileModal;
+    document.getElementById('closeTileModalFooterBtn').onclick = closeTileModal;
+    document.getElementById('closeTechModalBtn').onclick = closeTechModal;
+    document.getElementById('closeDiplomacyModalBtn').onclick = () => {
+        document.getElementById('diplomacyModalBackdrop').classList.add('hidden');
+    };
+    document.getElementById('closeQuoteModalBtn').onclick = () => {
+        document.getElementById('quoteModalBackdrop').classList.add('hidden');
+    };
+
+    document.getElementById('diplomacyBtn').onclick = openDiplomacyModal;
+    document.getElementById('techTreeBtn').onclick = openTechModal;
+    document.getElementById('currentResearchWidget').onclick = openTechModal;
+    document.getElementById('endTurnBtn').onclick = processEndTurn;
+
+    document.getElementById('zoomInBtn').onclick = () => {
+        camera.zoom = Math.min(2.5, camera.zoom * 1.15);
+        renderMap();
+    };
+    document.getElementById('zoomOutBtn').onclick = () => {
+        camera.zoom = Math.max(0.5, camera.zoom / 1.15);
+        renderMap();
+    };
+    document.getElementById('recenterBtn').onclick = () => {
+        if (capitalTilePos) recenterCameraOn(capitalTilePos.r, capitalTilePos.c);
+    };
+});
+
+</script>
+</body>
+</html>
